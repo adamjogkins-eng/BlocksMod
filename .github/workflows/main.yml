@@ -1,23 +1,39 @@
-name: Build BlocksMod
+name: Build Voidstrap Dylib
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
   build:
     runs-on: macos-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Compile BlocksMod
+      - name: Setup Xcode
+        # Ensures the latest iOS SDK is available
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Compile Optimized Dylib
         run: |
           xcrun -sdk iphoneos clang++ -dynamiclib -arch arm64 \
-          -fobjc-arc -O3 \
-          BlocksMod.mm -o BlocksMod.dylib \
-          -framework UIKit -framework Foundation -framework QuartzCore
+          -miphoneos-version-min=14.0 \
+          -framework UIKit \
+          -framework Foundation \
+          -framework CoreGraphics \
+          -framework QuartzCore \
+          Optimize.mm -o Voidstrap.dylib
           
-      - name: Upload Artifact
+      - name: Check Build Output
+        run: ls -lh Voidstrap.dylib
+
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BlocksMod-Payload
-          path: BlocksMod.dylib
+          name: Voidstrap-Mobile-Dylib
+          path: Voidstrap.dylib
